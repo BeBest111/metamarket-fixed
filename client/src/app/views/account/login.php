@@ -23,10 +23,14 @@
 
         <button type='submit' id='submitBtn' class='btn btn-primary'>Đăng nhập</button>
 
-        <?php echo "<a href='$googleLoginLink' class='login-gg-btn flex-center mt-3'>"; ?>
-        <i class='bi bi-google me-3'></i>
-        <span>Đăng nhập với Google</span>
-        </a>
+        <?php if (!empty($isGoogleLoginEnabled)) { ?>
+            <?php echo "<a href='$googleLoginLink' class='login-gg-btn flex-center mt-3'>"; ?>
+            <i class='bi bi-google me-3'></i>
+            <span>Đăng nhập với Google</span>
+            </a>
+        <?php } else { ?>
+            <p class='text-center text-gray mt-3'>Đăng nhập Google chưa được cấu hình</p>
+        <?php } ?>
 
         <div class='other-options mt-5 pt-3'>
             <a href='/quen-mat-khau' class='orange-color'>Quên mật khẩu ?</a>

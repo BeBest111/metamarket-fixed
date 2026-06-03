@@ -137,6 +137,12 @@ class Account extends Controller
 
     public function loginGoogle()
     {
+        if (!$this->isGoogleLoginEnabled()) {
+            self::setSessionMessage('Đăng nhập Google chưa được cấu hình', true);
+            self::redirect('/tai-khoan/dang-nhap');
+            return;
+        }
+
         $client = $this->getGoogleAPIClient();
 
         if (isset($_GET['code'])) {
@@ -318,15 +324,27 @@ class Account extends Controller
 
     private function renderLoginPage()
     {
-
-        $googleClient = $this->getGoogleAPIClient();
-
-        $this->setViewContent('googleLoginLink', $googleClient->createAuthUrl());
+        if ($this->isGoogleLoginEnabled()) {
+            $googleClient = $this->getGoogleAPIClient();
+            $this->setViewContent('googleLoginLink', $googleClient->createAuthUrl());
+            $this->setViewContent('isGoogleLoginEnabled', true);
+        } else {
+            $this->setViewContent('googleLoginLink', '');
+            $this->setViewContent('isGoogleLoginEnabled', false);
+        }
         $this->setContentViewPath('account/login');
         $this->appendCssLink(['account.css']);
         $this->appendJSLink(['account/login.js']);
         $this->setPageTitle('Đăng nhập');
         $this->render('layouts/general', $this->data);
+    }
+
+    private function isGoogleLoginEnabled()
+    {
+        $invalidValues = ['Your_ID', 'Your_Secret', ''];
+        return !in_array(GOOGLE_API_ID, $invalidValues, true)
+            && !in_array(GOOGLE_API_SECRET, $invalidValues, true)
+            && !empty(GOOGLE_API_CALLBACK_URL);
     }
 
     private function getGoogleAPIClient()

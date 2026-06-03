@@ -186,6 +186,16 @@ class Order extends Controller
             $result = $this->execPostRequest($endpoint, json_encode($data));
             $jsonResult = json_decode($result, true);
 
+            if (!is_array($jsonResult) || empty($jsonResult['payUrl'])) {
+                $errorMsg = 'Thanh toán MoMo thất bại. Vui lòng thử lại.';
+                if (is_array($jsonResult) && !empty($jsonResult['message'])) {
+                    $errorMsg = $jsonResult['message'];
+                }
+                self::setSessionMessage($errorMsg, true);
+                self::redirect('/thong-tin-giao-hang');
+                return;
+            }
+
             header('Location: ' . $jsonResult['payUrl']);
         }
     }

@@ -12,8 +12,13 @@ function getCart() {
 	if (!cartStr) {
 		return [];
 	}
-	const cart = JSON.parse(cartStr);
-	return Array.isArray(cart) ? cart : [];
+	try {
+		const cart = JSON.parse(cartStr);
+		return Array.isArray(cart) ? cart : [];
+	} catch (error) {
+		localStorage.setItem(LS_CART_KEY, JSON.stringify([]));
+		return [];
+	}
 }
 
 function addToCart({ productId, quantity, price = 0, discount = 0 }) {
@@ -46,7 +51,7 @@ function loadCartSummary() {
 }
 
 function removeAllCart() {
-	localStorage.setItem(LS_CART_KEY, []);
+	localStorage.setItem(LS_CART_KEY, JSON.stringify([]));
 }
 
 function removeCartItem(id) {

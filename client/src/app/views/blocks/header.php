@@ -71,8 +71,7 @@
         <div class="container flex-center-between">
             <?php require_once _DIR_ROOT . '/app/views/blocks/catalog.php'; ?>
             <?php
-            $contactPhone = CONTACT_PHONE;
-            echo "<a href='tel:$contactPhone' class='flex-center support-block cursor-pointer'>
+            echo "<a href='/cua-hang/1?chat=1' class='flex-center support-block cursor-pointer'>
                 <i class='bi bi-headset me-2'></i>
                 <strong>Tư vấn trực tiếp</strong>
             </a>";

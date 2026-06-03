@@ -28,6 +28,12 @@ const ProductSchema = new Schema({
 		maxlength: MAX.PRODUCT_NAME,
 		trim: true,
 	},
+	nameNormalized: {
+		type: String,
+		required: false,
+		default: '',
+		trim: true,
+	},
 	price: {
 		type: Number,
 		required: true,

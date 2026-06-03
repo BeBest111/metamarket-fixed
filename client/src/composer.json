@@ -7,5 +7,12 @@
 		"firebase/php-jwt": "^6.1",
 		"google/apiclient": "^2.12",
 		"phpmailer/phpmailer": "^6.6"
+	},
+	"config": {
+		"policy": {
+			"advisories": {
+				"block": false
+			}
+		}
 	}
 }

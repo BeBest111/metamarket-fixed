@@ -1,6 +1,7 @@
 const { DEFAULT, SVC_NAME } = require('../../../utils/constants');
 const { mongoosePaginate } = require('../../../utils/mongoose-paginate');
 const { Product, ProductDetail } = require('../product.db');
+const { normalizeText } = require('../../../utils/text');
 const { MoleculerError } = require('moleculer').Errors;
 const ObjectID = require('mongoose').Types.ObjectId;
 
@@ -262,6 +263,7 @@ module.exports = {
 			let { keyword, page, pageSize, select, sort } = ctx.params;
 			[page, pageSize] = [page, pageSize].map(Number);
 			keyword = decodeURIComponent(escape(keyword));
+			const normalizedKeyword = normalizeText(keyword);
 
 			try {
 				const productDocs = await mongoosePaginate(
@@ -269,6 +271,7 @@ module.exports = {
 					{
 						$or: [
 							{ name: { $regex: keyword, $options: 'i' } },
+							{ nameNormalized: { $regex: normalizedKeyword, $options: 'i' } },
 							{ code: { $regex: keyword, $options: 'i' } },
 						],
 					},
@@ -341,6 +344,7 @@ module.exports = {
 					categoryId,
 					shopId,
 					name,
+					nameNormalized: normalizeText(name),
 					price,
 					code,
 					stock,
@@ -594,6 +598,7 @@ module.exports = {
 						catalogId: catalogId,
 						categoryId: categoryId,
 						name: name,
+						nameNormalized: normalizeText(name),
 						price: price,
 						stock: stock,
 						discount: discount,

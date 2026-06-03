@@ -4,6 +4,20 @@ const { shopIO } = require('./socket-config');
 
 let onlineShops = [];
 
+const DEMO_AUTO_REPLY = true;
+const DEMO_REPLY_DELAY_MS = 600;
+
+function buildAutoReply(message = '') {
+	const normalized = message.toLowerCase();
+	if (normalized.includes('gia') || normalized.includes('bao nhieu')) {
+		return 'Gia san pham dang hien tren trang. Ban vui long cho minh ma san pham nhe.';
+	}
+	if (normalized.includes('ship') || normalized.includes('giao')) {
+		return 'Phi giao hang duoc tinh o buoc thanh toan. Ban can ho tro them gi khong a?';
+	}
+	return 'Shop da nhan tin. Nhan vien se phan hoi som nhat a.';
+}
+
 function findOnlineShopByShopId(shopId) {
 	return onlineShops.find((shop) => shop.shopId === shopId);
 }
@@ -51,6 +65,19 @@ shopIO.on('connection', function (socket) {
 		}
 
 		await updateShopChatHistory(userId, shopId, newMessage);
+
+		if (DEMO_AUTO_REPLY) {
+			const reply = buildAutoReply(message);
+			const replyMessage = {
+				isUser: false,
+				content: reply,
+				time: new Date(),
+			};
+			setTimeout(() => {
+				shopIO.to(`user-${userId}`).emit('fs shop chat', replyMessage);
+			}, DEMO_REPLY_DELAY_MS);
+			await updateShopChatHistory(userId, shopId, replyMessage);
+		}
 	});
 
 	socket.on('fc shop chat', async (data) => {

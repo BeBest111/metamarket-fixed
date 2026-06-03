@@ -5,7 +5,16 @@ require_once _DIR_ROOT . '/utils/Format.php';
 // Required product-card.css
 function renderProductCard($_id, $name, $avt, $price, $discount, $unit, $stock = 1)
 {
-    $productAvt = empty($avt) ? DEFAULT_PRODUCT_AVT : ImageUtil::toThumbnail(STATIC_FILE_URL . "/$avt");
+    if (empty($avt)) {
+        $productAvt = DEFAULT_PRODUCT_AVT;
+    } else {
+        $publicRoot = _DIR_ROOT . '/public/';
+        $thumbRelPath = ImageUtil::toThumbnail($avt);
+        $thumbFilePath = $publicRoot . $thumbRelPath;
+        $productAvt = file_exists($thumbFilePath)
+            ? STATIC_FILE_URL . "/$thumbRelPath"
+            : STATIC_FILE_URL . "/$avt";
+    }
     $discountRateXML = !empty($discount) ? "<label class='discount-rate'>-$discount%</label>" : "";
     $formattedPrice = FormatUtil::currencyVNDFormat($price);
     $discountPriceXML = !empty($discount) ? "<div class='discount'>$formattedPrice</div>" :  "";

@@ -125,5 +125,12 @@ jQuery(function () {
 		$('#showChatBtn').on('click', function () {
 			$('#chatBoxBalloon').click();
 		});
+
+		const params = new URLSearchParams(window.location.search);
+		if (params.get('chat') === '1') {
+			setTimeout(() => {
+				$('#chatBoxBalloon').click();
+			}, 200);
+		}
 	}
 });
