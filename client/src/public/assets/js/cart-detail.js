@@ -108,7 +108,7 @@ function renderProductCart(product) {
 	$('#cart').append(xml);
 }
 
-function updateProductInCart(productId, quantity) {
+async function updateProductInCart(productId, quantity) {
 	const index = products.findIndex((p) => p._id === productId);
 	if (index !== -1) {
 		products[index].quantity += quantity;
@@ -118,14 +118,14 @@ function updateProductInCart(productId, quantity) {
 		$(`.cart-action input[data-id="${productId}"]`).val(
 			products[index].quantity,
 		);
-		updateQuantityCart(productId, products[index].quantity);
-		loadCartSummary();
+		await updateQuantityCart(productId, products[index].quantity);
+		await loadCartSummary();
 		renderCartSummary();
 	}
 }
 
 jQuery(async function () {
-	const cart = getCart();
+	const cart = await getCart();
 
 	if (!cart || !cart.length) {
 		renderEmptyCart();
@@ -142,30 +142,23 @@ jQuery(async function () {
 
 	renderCartSummary();
 
-	// reload & render cart
-	removeAllCart();
+	renderCartSummary();
+
+	// render cart
 	products.forEach((p) => {
-		addToCart({
-			productId: p._id,
-			quantity: p.quantity,
-			price: p.price,
-			discount: p.discount,
-		});
 		renderProductCart(p);
 	});
-	loadCartSummary();
 
 	// remove all cart
-	$('#removeAllBtn').click(function () {
+	$('#removeAllBtn').click(async function () {
 		cartTotal = 0;
 		products = [];
-		removeAllCart();
-		loadCartSummary();
+		await removeAllCart();
+		await loadCartSummary();
 		renderEmptyCart();
-		loadCartSummary();
 	});
 
-	$('.remove-item').on('click', function () {
+	$('.remove-item').on('click', async function () {
 		const productId = $(this).attr('data-id');
 		const product = products.find((p) => p._id === productId);
 
@@ -178,29 +171,29 @@ jQuery(async function () {
 			if (products.length === 0) {
 				renderEmptyCart();
 			}
-			removeCartItem(productId);
+			await removeCartItem(productId);
 			renderCartSummary();
-			loadCartSummary();
+			await loadCartSummary();
 		}
 	});
 
-	$('.cart-action .increase').on('click', function () {
+	$('.cart-action .increase').on('click', async function () {
 		const productId = $(this).attr('data-id');
 		const { quantity, stock } = products.find((p) => p._id === productId);
 		if (quantity < stock) {
-			updateProductInCart(productId, 1);
+			await updateProductInCart(productId, 1);
 		}
 	});
 
-	$('.cart-action .decrease').on('click', function () {
+	$('.cart-action .decrease').on('click', async function () {
 		const productId = $(this).attr('data-id');
 		const { quantity } = products.find((p) => p._id === productId);
 		if (quantity > 1) {
-			updateProductInCart(productId, -1);
+			await updateProductInCart(productId, -1);
 		}
 	});
 
-	$('.cart-action input').on('change', function () {
+	$('.cart-action input').on('change', async function () {
 		const productId = $(this).attr('data-id');
 		const { stock, quantity } = products.find((p) => p._id === productId);
 		let newQuantity = Number($(this).val());

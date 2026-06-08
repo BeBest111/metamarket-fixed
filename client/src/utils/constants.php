@@ -11,6 +11,7 @@ define('SHIPPING_SERVICE_API_URL', $_ENV['SHIPPING_SERVICE_API'] ?? '');
 define('SHOP_SERVICE_API_URL', $_ENV['SHOP_SERVICE_API'] ?? '');
 define('SUPPORT_SERVICE_API_URL', $_ENV['SUPPORT_SERVICE_API'] ?? '');
 define('USER_SERVICE_API_URL', $_ENV['USER_SERVICE_API'] ?? '');
+define('CART_SERVICE_API_URL', $_ENV['CART_SERVICE_API'] ?? '');
 
 // static file server
 define('STATIC_FILE_URL', $_ENV['STATIC_FILE_URL'] ?? '/public');

@@ -1,4 +1,10 @@
-const LS_CART_KEY = 'mm-cart';
+function requireLogin() {
+    if (!GLOBAL_USER_ID) {
+        window.location.href = '/tai-khoan/dang-nhap';
+        return true;
+    }
+    return false;
+}
 
 function currencyFormat(price = 0) {
 	return new Intl.NumberFormat('vi-VN', {
@@ -7,41 +13,47 @@ function currencyFormat(price = 0) {
 	}).format(price);
 }
 
-function getCart() {
-	const cartStr = localStorage.getItem(LS_CART_KEY);
-	if (!cartStr) {
-		return [];
-	}
+async function getCart() {
+	if (!GLOBAL_USER_ID) return [];
 	try {
-		const cart = JSON.parse(cartStr);
-		return Array.isArray(cart) ? cart : [];
+		const res = await fetch(`${CART_SERVICE_API_URL}/user/${GLOBAL_USER_ID}`);
+		const data = await res.json();
+		return data?.items || [];
 	} catch (error) {
-		localStorage.setItem(LS_CART_KEY, JSON.stringify([]));
+		console.error(error);
 		return [];
 	}
 }
 
-function addToCart({ productId, quantity, price = 0, discount = 0 }) {
-	const cart = getCart();
-
-	const productIndex = cart.findIndex((p) => p.productId === productId);
-	if (productIndex === -1) {
-		cart.push({ productId, quantity, price, discount });
-	} else {
-		cart[productIndex].quantity += quantity;
+async function addToCart({ productId, quantity, shopId }) {
+    if (requireLogin()) return;
+	try {
+		await fetch(`${CART_SERVICE_API_URL}/user/${GLOBAL_USER_ID}/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId, quantity, shopId })
+        });
+	} catch (error) {
+		console.error(error);
 	}
-
-	localStorage.setItem(LS_CART_KEY, JSON.stringify(cart));
 }
 
-function loadCartSummary() {
-	const cart = getCart();
+async function loadCartSummary() {
+	const cart = await getCart();
 	if (cart && cart.length > 0) {
 		const cartTotal = cart.reduce((sum, p) => sum + p.quantity, 0);
-		const cartTotalMoney = cart.reduce(
-			(sum, p) => sum + p.quantity * ((p.price * (100 - p.discount)) / 100),
-			0,
-		);
+        
+        const promises = cart.map(p => fetch(`${PRODUCT_SERVICE_API_URL}/id/${p.productId}`).then(r => r.json()));
+        const productsInfo = await Promise.all(promises);
+        
+		let cartTotalMoney = 0;
+        cart.forEach(cartItem => {
+            const product = productsInfo.find(p => p._id === cartItem.productId);
+            if (product) {
+                cartTotalMoney += cartItem.quantity * ((product.price * (100 - (product.discount || 0))) / 100);
+            }
+        });
+
 		$('span[id^="cartQuantity"]').text(`(${cartTotal})`);
 		$('#cartMoney').text(currencyFormat(cartTotalMoney));
 	} else {
@@ -50,39 +62,63 @@ function loadCartSummary() {
 	}
 }
 
-function removeAllCart() {
-	localStorage.setItem(LS_CART_KEY, JSON.stringify([]));
+async function removeAllCart() {
+    if (!GLOBAL_USER_ID) return;
+	try {
+		await fetch(`${CART_SERVICE_API_URL}/user/${GLOBAL_USER_ID}/clear`, { method: 'DELETE' });
+	} catch (error) {
+		console.error(error);
+	}
 }
 
-function removeCartItem(id) {
-	const cart = getCart();
-	const newCart = cart.filter((p) => p.productId !== id);
-	localStorage.setItem(LS_CART_KEY, JSON.stringify(newCart));
+async function removeCartItem(productId) {
+    if (!GLOBAL_USER_ID) return;
+	try {
+		await fetch(`${CART_SERVICE_API_URL}/user/${GLOBAL_USER_ID}/remove`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId })
+        });
+	} catch (error) {
+		console.error(error);
+	}
 }
 
-function updateQuantityCart(productId, quantity) {
-	const cart = getCart();
-	const newCart = cart.map((p) =>
-		p.productId === productId ? { ...p, quantity } : p,
-	);
-	localStorage.setItem(LS_CART_KEY, JSON.stringify(newCart));
+async function updateQuantityCart(productId, quantity) {
+    if (!GLOBAL_USER_ID) return;
+	try {
+		await fetch(`${CART_SERVICE_API_URL}/user/${GLOBAL_USER_ID}/update`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId, quantity })
+        });
+	} catch (error) {
+		console.error(error);
+	}
 }
 
 jQuery(function () {
-	loadCartSummary();
+	if (GLOBAL_USER_ID) {
+	    loadCartSummary();
+    }
 
-	$('.add-cart').on('click', function () {
+	$('.add-cart').on('click', async function () {
+        if (requireLogin()) return;
+
 		const productId = $(this).attr('data-id');
-		const productPrice = $(this).attr('data-price');
 		const productStock = Number($(this).attr('data-stock'));
-		const productDiscount = Number($(this).attr('data-discount'));
+		// Need shopId here. If it is not in the data-shop attribute, we can fetch it.
+        // Wait, 'addShopToProductList' in Order.php gets it via API: `/get-shop/:productId`
+        // We can just fetch it before adding to cart.
 
 		if (productId) {
-			addToCart({
+            const shopRes = await fetch(`${PRODUCT_SERVICE_API_URL}/get-shop/${productId}`);
+            const shopId = await shopRes.json();
+
+			await addToCart({
 				productId,
 				quantity: 1,
-				price: Number(productPrice),
-				discount: productDiscount,
+				shopId
 			});
 			$(this).attr('data-stock', productStock - 1);
 			if (productStock - 1 <= 0) {
@@ -92,8 +128,8 @@ jQuery(function () {
 						'<button class="btn btn-accent disabled">Tạm hết hàng</button>',
 					);
 			}
-			loadCartSummary();
-			if (showToast) {
+			await loadCartSummary();
+			if (typeof showToast !== 'undefined') {
 				showToast();
 			}
 		}

@@ -31,26 +31,15 @@ function showError(msg) {
 }
 
 jQuery(async function () {
-	const cart = getCart();
+	const cart = await getCart();
 
 	if (!cart || !cart.length) {
 		window.location.href = '/';
 		return;
 	}
 
-	// reload cart
 	const products = await getCartData(cart);
 	products.sort((p1, p2) => p1.price - p2.price);
-	removeAllCart();
-	products.forEach((p) => {
-		addToCart({
-			productId: p._id,
-			quantity: p.quantity,
-			price: p.price,
-			discount: p.discount,
-		});
-	});
-	loadCartSummary();
 
 	const cartTotal = products.reduce(
 		(sum, p) => sum + p.quantity * ((p.price * (100 - p.discount)) / 100),
@@ -93,11 +82,6 @@ jQuery(async function () {
 
 		$('#error').addClass('d-none');
 		$('#form button').addClass('disabled');
-		$(this).append(
-			`<input type='number' name='cartTotal' value='${cartTotal}' class='d-none' />`,
-			`<input type='text' name='cart' 
-							value='${JSON.stringify(getCart())}' class='d-none' />`,
-		);
 
 		this.submit();
 	});

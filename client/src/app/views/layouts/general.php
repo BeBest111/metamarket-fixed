@@ -83,6 +83,19 @@ if (!empty($passedVariables)) {
 ?>
 
 <?php
+// global script vars
+echo "<script>\n";
+echo "const CART_SERVICE_API_URL = '" . CART_SERVICE_API_URL . "';\n";
+global $user;
+if (!empty($user) && !empty($user->_get('userId'))) {
+    echo "const GLOBAL_USER_ID = " . $user->_get('userId') . ";\n";
+} else {
+    echo "const GLOBAL_USER_ID = null;\n";
+}
+echo "</script>\n";
+?>
+
+<?php
 echo "<script src='$staticUrl/assets/js/catalog.js'></script>";
 echo "<script src='$staticUrl/assets/js/utils/cart.js'></script>";
 echo "<script src='$staticUrl/assets/js/search.js'></script>";

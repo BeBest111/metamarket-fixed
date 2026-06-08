@@ -50,8 +50,21 @@ class Order extends Controller
                 $wardId = $receiverData['wardId'];
                 $addrDetail = $receiverData['addrDetail'];
                 $orderNote = $receiverData['orderNote'];
-                $cart = json_decode($receiverData['cart']);
-                $products = $this->addShopToProductList($cart);
+
+                $cartRes = ApiCaller::get(CART_SERVICE_API_URL . '/user/' . $user->_get('userId'));
+                $cartItems = isset($cartRes['data']['items']) ? $cartRes['data']['items'] : [];
+                $products = [];
+                foreach ($cartItems as $item) {
+                    $productRes = ApiCaller::get(PRODUCT_SERVICE_API_URL . '/id/' . $item['productId']);
+                    $product = $productRes['data'];
+                    $products[] = (object)[
+                        'productId' => $item['productId'],
+                        'quantity' => $item['quantity'],
+                        'shopId' => $item['shopId'],
+                        'price' => $product['price'],
+                        'discount' => isset($product['discount']) ? $product['discount'] : 0,
+                    ];
+                }
 
                 if ($resultCode == 0) {
                     // Create an order
@@ -85,6 +98,10 @@ class Order extends Controller
                             // Increase product stock
                             $this->updateStockProducts($products);
                             $this->updatePurchaseTotalProducts($products);
+                            
+                            // Clear cart
+                            ApiCaller::delete(CART_SERVICE_API_URL . '/user/' . $user->_get('userId') . '/clear');
+                            
                             $this->appendJSLink('order/payment-success.js');
                             $this->setViewContent('isError', 0);
                         } else {
@@ -144,15 +161,27 @@ class Order extends Controller
     {
         if (!empty($_POST)) {
             global $hostUrl;
+            global $user;
 
             $endpoint = MOMO_ENDPOINT;
             $partnerCode = MOMO_PARTNER_CODE;
             $accessKey = MOMO_ACCESS_KEY;
             $secretKey = MOMO_SECRET_KEY;
 
+            $cartRes = ApiCaller::get(CART_SERVICE_API_URL . '/user/' . $user->_get('userId'));
+            $cartItems = isset($cartRes['data']['items']) ? $cartRes['data']['items'] : [];
+            $cartTotal = 0;
+            foreach ($cartItems as $item) {
+                $productRes = ApiCaller::get(PRODUCT_SERVICE_API_URL . '/id/' . $item['productId']);
+                $product = $productRes['data'];
+                $price = $product['price'];
+                $discount = isset($product['discount']) ? $product['discount'] : 0;
+                $cartTotal += $item['quantity'] * ($price * (100 - $discount) / 100);
+            }
+
             $orderId = time() . "";
             $orderInfo = "Thanh toán đơn hàng qua MoMo QR Code";
-            $amount = (int)$_POST['cartTotal'] + SHIPPING_FEE;
+            $amount = (int)$cartTotal + SHIPPING_FEE;
             $redirectUrl = $hostUrl . '/ket-qua-thanh-toan';
             $ipnUrl = $hostUrl . '/ket-qua-thanh-toan';
             $extraData =
@@ -160,8 +189,7 @@ class Order extends Controller
                 '&receiverPhone=' . $_POST['receiverPhone'] .
                 '&wardId=' . $_POST['wardId'] .
                 '&addrDetail=' . $_POST['addrDetail'] .
-                '&orderNote=' . $_POST['note'] .
-                '&cart=' . $_POST['cart'];
+                '&orderNote=' . $_POST['note'];
 
             $requestId = time() . "";
             $requestType = $paymentType;
