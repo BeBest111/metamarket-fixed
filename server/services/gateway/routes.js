@@ -1,6 +1,7 @@
 const { SVC_NAME } = require('../../utils/constants');
 
 const AGGREGATE_SVC = SVC_NAME.AGGREGATE;
+const CART_SVC = SVC_NAME.CART;
 const INTERNAL_SVC = SVC_NAME.INTERNAL;
 const ORDER_SVC = SVC_NAME.ORDER;
 const PAYMENT_SVC = SVC_NAME.PAYMENT;
@@ -10,6 +11,14 @@ const SHIPPING_SVC = SVC_NAME.SHIPPING;
 const SHOP_SVC = SVC_NAME.SHOP;
 const SUPPORT_SVC = SVC_NAME.SUPPORT;
 const USER_SVC = SVC_NAME.USER;
+
+const cartAliases = {
+	'GET carts/user/:userId': `${CART_SVC}.getCart`,
+	'POST carts/user/:userId/add': `${CART_SVC}.addToCart`,
+	'PUT carts/user/:userId/update': `${CART_SVC}.updateQuantity`,
+	'DELETE carts/user/:userId/remove': `${CART_SVC}.removeFromCart`,
+	'DELETE carts/user/:userId/clear': `${CART_SVC}.clearCart`,
+};
 
 const productAliases = {
 	'GET products/id/:productId': `${PRODUCT_SVC}.getBasicProductInfoById`,
@@ -97,6 +106,12 @@ module.exports = [
 	{
 		path: '/api/v1',
 		whitelist: ['**'],
+		cors: {
+			origin: '*',
+			methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'],
+			allowedHeaders: '*',
+			credentials: true
+		},
 		authentication: false,
 		autoAliases: false,
 		mergeParams: true,
@@ -109,6 +124,9 @@ module.exports = [
 		aliases: {
 			// Aggregate service
 			...aggregateAliases,
+
+			// Cart service
+			...cartAliases,
 
 			// Internal service
 			...internalAliases,
