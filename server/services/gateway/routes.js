@@ -1,5 +1,6 @@
 const { SVC_NAME } = require('../../utils/constants');
 
+const AUTH_SVC = SVC_NAME.AUTH;
 const AGGREGATE_SVC = SVC_NAME.AGGREGATE;
 const INTERNAL_SVC = SVC_NAME.INTERNAL;
 const ORDER_SVC = SVC_NAME.ORDER;
@@ -10,6 +11,13 @@ const SHIPPING_SVC = SVC_NAME.SHIPPING;
 const SHOP_SVC = SVC_NAME.SHOP;
 const SUPPORT_SVC = SVC_NAME.SUPPORT;
 const USER_SVC = SVC_NAME.USER;
+
+const authAliases = {
+  'POST auth/register': `${AUTH_SVC}.register`,
+  'POST auth/login': `${AUTH_SVC}.login`,
+  'POST auth/verify-token': `${AUTH_SVC}.verifyToken`,
+  'GET auth/me': `${AUTH_SVC}.me`,
+};
 
 const productAliases = {
 	'GET products/id/:productId': `${PRODUCT_SVC}.getBasicProductInfoById`,
@@ -107,6 +115,7 @@ module.exports = [
 		},
 
 		aliases: {
+			...authAliases,
 			// Aggregate service
 			...aggregateAliases,
 

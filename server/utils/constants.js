@@ -1,6 +1,7 @@
 module.exports = {
 	// Services name
 	SVC_NAME: {
+		AUTH: 'auth',
 		AGGREGATE: 'aggregate',
 		GATEWAY: 'gateway',
 		INTERNAL: 'internal',
