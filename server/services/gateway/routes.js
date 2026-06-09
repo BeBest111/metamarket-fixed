@@ -106,6 +106,12 @@ module.exports = [
 	{
 		path: '/api/v1',
 		whitelist: ['**'],
+		cors: {
+			origin: '*',
+			methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'],
+			allowedHeaders: '*',
+			credentials: true
+		},
 		authentication: false,
 		autoAliases: false,
 		mergeParams: true,
